@@ -9,15 +9,20 @@
     android:layout_margin="20dp"
     android:backgroundTint="@color/design_default_color_on_primary"
     android:orientation="vertical"
-    tools:context=".JoinActivity">
+    tools:context=".HostPairedActivity">
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/Host_compose_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <TextView
-        android:id="@+id/JoinTV"
+        android:id="@+id/HostingTV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
 
-        android:text="Join"
+        android:text="Hosting"
         android:textAlignment="center"
         android:textColor="@color/design_default_color_on_secondary"
         android:textSize="40sp"
@@ -34,30 +39,37 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/btn_JoinMenuOptionBack"
-        app:layout_constraintTop_toBottomOf="@id/JoinTV"
+        app:layout_constraintBottom_toTopOf="@id/btn_HostPairedMenuOptionCancel"
+        app:layout_constraintTop_toBottomOf="@id/HostingTV"
         app:layout_constraintVertical_bias="0.0"
         tools:layout_editor_absoluteX="-16dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:text="Tap this device to the host!"
+            android:text="Hosting Complete, don't get caught."
             android:textAlignment="center"
             android:textSize="30sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/device_list"
+            android:textAlignment="center"
+            android:textSize="22sp" />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/btn_JoinMenuOptionBack"
-        android:layout_width="200dp"
+        android:id="@+id/btn_HostPairedMenuOptionCancel"
+        android:layout_width="wrap_content"
         android:layout_height="100dp"
         android:layout_marginBottom="8dp"
         android:backgroundTint="@color/design_default_color_on_secondary"
 
         android:gravity="center"
-        android:text="Back"
+        android:text="Stop Hosting"
 
         android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"

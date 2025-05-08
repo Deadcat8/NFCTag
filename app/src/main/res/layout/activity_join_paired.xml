@@ -9,15 +9,20 @@
     android:layout_margin="20dp"
     android:backgroundTint="@color/design_default_color_on_primary"
     android:orientation="vertical"
-    tools:context=".JoinActivity">
+    tools:context=".JoinPairedActivity">
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/Join_compose_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <TextView
-        android:id="@+id/JoinTV"
+        android:id="@+id/ConnectedTV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
 
-        android:text="Join"
+        android:text="Connected"
         android:textAlignment="center"
         android:textColor="@color/design_default_color_on_secondary"
         android:textSize="40sp"
@@ -34,8 +39,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/btn_JoinMenuOptionBack"
-        app:layout_constraintTop_toBottomOf="@id/JoinTV"
+        app:layout_constraintBottom_toTopOf="@id/btn_JoinPairedMenuOptionCancel"
+        app:layout_constraintTop_toBottomOf="@id/ConnectedTV"
         app:layout_constraintVertical_bias="0.0"
         tools:layout_editor_absoluteX="-16dp">
 
@@ -43,21 +48,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="50dp"
-            android:text="Tap this device to the host!"
+            android:text="@string/Connected"
             android:textAlignment="center"
             android:textSize="30sp" />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/btn_JoinMenuOptionBack"
+        android:id="@+id/btn_JoinPairedMenuOptionCancel"
         android:layout_width="200dp"
         android:layout_height="100dp"
         android:layout_marginBottom="8dp"
         android:backgroundTint="@color/design_default_color_on_secondary"
 
         android:gravity="center"
-        android:text="Back"
+        android:text="Cancel"
 
         android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"

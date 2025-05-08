@@ -16,12 +16,17 @@ class HostActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(binding.root)
 
         binding.btnHostMenuOptionBack.setOnClickListener(this)
+        binding.btnHostMenuOptionStart.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
         when(v?.id){
             R.id.btn_HostMenuOptionBack ->{
                 val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.btn_HostMenuOptionStart ->{
+                val intent = Intent(this, HostPairedActivity::class.java)
                 startActivity(intent)
             }
         }

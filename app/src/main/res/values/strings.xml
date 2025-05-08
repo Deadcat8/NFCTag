@@ -48,4 +48,5 @@
     <string name="device_list">
         Devices Connected:\n\n
     </string>
+    <string name="Connected">You are connected to: /nHappy Hunting!</string>
 </resources>

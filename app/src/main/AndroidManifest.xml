@@ -22,6 +22,8 @@
         <activity android:name=".HostActivity" />
         <activity android:name=".JoinActivity"/>
         <activity android:name=".AboutusActivity"/>
+        <activity android:name=".HostPairedActivity"/>
+        <activity android:name=".JoinPairedActivity"/>
         <activity
             android:name=".MainActivity"
             android:exported="true" >
