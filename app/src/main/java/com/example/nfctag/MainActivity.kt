@@ -1,7 +1,9 @@
 package com.example.nfctag
 
+import DeviceIdManager
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
@@ -31,6 +33,8 @@ class MainActivity : AppCompatActivity() , View.OnClickListener {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        val deviceId = DeviceIdManager.getOrCreateDeviceId(this)
+        Log.d("DeviceIdManager", "returned ID:$deviceId")
     }
 
     override fun onClick(v: View?) {
