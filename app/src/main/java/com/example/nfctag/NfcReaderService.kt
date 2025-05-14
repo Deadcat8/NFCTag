@@ -1,6 +1,5 @@
 package com.example.nfctag
 
-import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,19 +15,11 @@ import android.nfc.tech.IsoDep
 import android.nfc.tech.Ndef
 import android.os.Binder
 import android.os.Build
-import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import androidx.compose.ui.graphics.colorspace.connect
 import androidx.core.app.NotificationCompat
-import androidx.core.app.ServiceCompat.START_STICKY
-import androidx.core.app.ServiceCompat.startForeground
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.io.IOException
-import java.security.Provider
-import java.util.Arrays
-import kotlin.text.equals
 
 // NfcReaderService (The Reader):
 // •The NfcReaderService runs on the device that is reading an NFC tag or communicating with
@@ -78,6 +69,7 @@ class NfcReaderService : Service() {
         intentFilter = arrayOf(IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED))
         techList = arrayOf(arrayOf(IsoDep::class.java.name))
         Log.d("NfcReaderService", "Service created with nfcAdapter: $nfcAdapter and pendingIntent: $pendingIntent")
+        createNotification()
     }
     override fun onBind(intent: Intent?): IBinder {
         Log.d("NfcReaderService", "onBind called.")
@@ -234,19 +226,24 @@ class NfcReaderService : Service() {
 
     // IsoDep processing function
     private fun processIsoDepTag(detectedTag: Tag, isoDep: IsoDep) {
+        Log.d("NfcReaderService", "Processing IsoDep tag with ID: ${detectedTag.id?.toHexString() ?: "N/A"}")
         try {
             isoDep.connect()
             Log.d("NfcReaderService", "IsoDep connection established.")
 
             // 1. Send the SELECT AID APDU to select the HCE application
-            val selectAidApdu = buildSelectAidApdu(HCE_AID) // Assuming buildSelectAidApdu exists
+            val selectAidApdu = buildSelectAidApdu() // Assuming buildSelectAidApdu exists
             Log.d("NfcReaderService", "Sending SELECT AID APDU: ${selectAidApdu.toHexString()}")
 
             val selectResponse = isoDep.transceive(selectAidApdu)
             Log.d("NfcReaderService", "Received SELECT AID response: ${selectResponse.toHexString()}")
 
             // Check if the SELECT AID was successful (status word 9000)
-            if (selectResponse.size >= 2 && Arrays.equals(selectResponse.copyOfRange(selectResponse.size - 2, selectResponse.size), STATUS_WORD_SUCCESS)) {
+            if (selectResponse.size >= 2 && selectResponse.copyOfRange(
+                    selectResponse.size - 2,
+                    selectResponse.size
+                ).contentEquals(STATUS_WORD_SUCCESS)
+            ) {
                 Log.d("NfcReaderService", "SELECT AID successful. Proceeding with further commands.")
 
                 // 2. If SELECT AID was successful, send your custom command to get the device ID
@@ -258,7 +255,11 @@ class NfcReaderService : Service() {
 
                 // 3. Process the response for the device ID
                 // Assuming the response structure is the device ID bytes followed by the status word (9000)
-                if (deviceIdResponse.size >= 2 && Arrays.equals(deviceIdResponse.copyOfRange(deviceIdResponse.size - 2, deviceIdResponse.size), STATUS_WORD_SUCCESS)) {
+                if (deviceIdResponse.size >= 2 && deviceIdResponse.copyOfRange(
+                        deviceIdResponse.size - 2,
+                        deviceIdResponse.size
+                    ).contentEquals(STATUS_WORD_SUCCESS)
+                ) {
                     val deviceIdBytes = deviceIdResponse.copyOfRange(0, deviceIdResponse.size - 2)
                     val deviceId = String(deviceIdBytes, Charsets.UTF_8)
                     Log.d("NfcReaderService", "Successfully read peer device ID: $deviceId")
@@ -299,9 +300,9 @@ class NfcReaderService : Service() {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
         Log.d("NfcReaderService", "Broadcasted HCE_DEVICE_ID_IDENTIFIED with deviceId: $deviceId")
     }
-    private fun buildSelectAidApdu(aid: String): ByteArray {
+    private fun buildSelectAidApdu(): ByteArray {
         // Convert the AID hex string to bytes
-        val aidBytes = hexStringToByteArray(aid) // Assuming hexStringToByteArray exists
+        val aidBytes = hexStringToByteArray(HCE_AID) // Assuming hexStringToByteArray exists
         // Lc (Length of command data) is the length of the AID in bytes
         val lc = aidBytes.size.toByte()
 
