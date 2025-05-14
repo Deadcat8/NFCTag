@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.content.SharedPreferences
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -20,11 +21,27 @@ import androidx.compose.foundation.layout.size
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import android.widget.ImageView
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import com.example.nfctag.databinding.ActivityMainBinding
+import com.bumptech.glide.Glide
+import androidx.core.content.edit
+import kotlin.text.clear
 
-class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.ReaderCallback{
+class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.ReaderCallback {
     // Binds Activity to XML
     lateinit var binding : ActivityMainBinding
+    private lateinit var backgroundGifImageView: ImageView
 
     // NfcReaderService related variables
     private var nfcReaderService: NfcReaderService? = null
@@ -50,6 +67,7 @@ class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.Read
             Log.d("MainActivity", "NfcReaderService unbound")
         }
     }
+    //Nfc Event Receiver and Handler for all disclosed events
     private val nfcEventReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -58,12 +76,11 @@ class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.Read
                     val deviceId = intent.getStringExtra("deviceId")
                     if (deviceId != null) {
                         Log.i("MainActivity", "Received HCE_DEVICE_ID_IDENTIFIED: $deviceId")
-                        // TODO: Trigger your main event or logic based on the HCE device ID
+                        savePeerDeviceId(deviceId)
                     }
                 }
                 // Handle the event when an NDEF message is read
                 "com.example.nfctag.NDEF_MESSAGE_READ" -> {
-                    // NdefMessage is Parcelable, so you can get it directly
                     val ndefMessage: NdefMessage? = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                         intent.getParcelableExtra("ndefMessage", NdefMessage::class.java)
                     } else {
@@ -111,17 +128,33 @@ class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.Read
         }
     }
 
+    //Hides alert Dialog
+    private val showDialog = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //enableEdgeToEdge()
+        enableEdgeToEdge()
+
+        backgroundGifImageView = binding.backgroundGif
+        Glide.with(this)
+            .asGif()
+            .load(R.drawable.appbackground)
+            .into(backgroundGifImageView)
 
         binding.btnMenuOptionHost.setOnClickListener(this)
         binding.btnMenuOptionJoin.setOnClickListener(this)
         binding.btnMenuOptionAboutUs.setOnClickListener(this)
+        binding.btnResetButton.setOnClickListener(this)
+        val composeView = findViewById<ComposeView>(R.id.Main_compose_view)
+        composeView.setContent {
+            AlertContent(showDialog)
+        }
+
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
         val filter = IntentFilter().apply {
             addAction("com.example.nfctag.HCE_DEVICE_ID_IDENTIFIED")
@@ -134,26 +167,28 @@ class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.Read
             // Add more actions here if your service broadcasts other events
         }
         LocalBroadcastManager.getInstance(this).registerReceiver(nfcEventReceiver, filter)
+
         // Start the NfcReaderService ready to read the hosting device
         val serviceIntent = Intent(this, NfcReaderService::class.java)
-        startService(serviceIntent)
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
     }
     override fun onDestroy() {
         super.onDestroy()
-        // Unregister the broadcast receiver when the Activity is destroyed
+         //Unregister the broadcast receiver when the Activity is destroyed
         LocalBroadcastManager.getInstance(this).unregisterReceiver(nfcEventReceiver)
         // Unbind from the service when the Activity is destroyed
         if (isBound) {
             unbindService(serviceConnection)
             isBound = false
         }
-    }
+     }
     override fun onResume() {
         super.onResume()
         enableNfcReaderMode()
@@ -202,6 +237,16 @@ class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.Read
             Log.w("MainActivity", "NfcReaderService not bound or null, cannot process discovered tag.")
         }
     }
+    private fun savePeerDeviceId(id: String) {
+        val prefs = getSharedPreferences("known_devices", Context.MODE_PRIVATE)
+        if (!prefs.contains(id)) {
+            prefs.edit() { putBoolean(id, true) }
+            Log.d("NFC", "New device detected and stored: $id")
+        } else {
+            Log.d("NFC", "Known device reconnected: $id")
+            //TODO Notify User of being caught
+        }
+    }
 
     override fun onClick(v: View?) {
 
@@ -218,7 +263,49 @@ class MainActivity : AppCompatActivity() , View.OnClickListener, NfcAdapter.Read
                 val intent = Intent(this, AboutusActivity::class.java)
                 startActivity(intent)
             }
+            R.id.btn_resetButton ->{
+                showDialog.value = true
+            }
         }
+    }
+
+    @Composable
+    fun AlertContent(showDialog: MutableState<Boolean>) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (showDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { showDialog.value = false },
+                    title = { Text("Warning") },
+                    text = { Text("Are you sure you want to continue? This will cancel the game and lose all current player data.") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDialog.value = false
+                            clearSavedPeerDeviceIds(this@MainActivity)
+                        }) {
+                            Text("Yes")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDialog.value = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+        }
+    }
+    fun clearSavedPeerDeviceIds(context: Context) {
+        // Get the SharedPreferences instance and editor
+        val prefs: SharedPreferences = context.getSharedPreferences("known_devices", Context.MODE_PRIVATE)
+        prefs.edit() {
+            // Clear all entries in the editor
+            clear()
+            apply()
+        }
+        Log.d("SharedPreferences", "Cleared all saved peer device IDs from known_devices.")
     }
 
     // Various Helper Functions

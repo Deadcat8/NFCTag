@@ -29,7 +29,6 @@ class HostPairedActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(binding.root)
 
         binding.btnHostPairedMenuOptionCancel.setOnClickListener(this)
-
         val composeView = findViewById<ComposeView>(R.id.Host_compose_view)
         composeView.setContent {
             AlertContent(showDialog)
@@ -44,7 +43,7 @@ class HostPairedActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun CancelGame(){
+    private fun cancelGame(){
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
@@ -65,7 +64,7 @@ class HostPairedActivity : AppCompatActivity(), View.OnClickListener {
                     confirmButton = {
                         TextButton(onClick = {
                             showDialog.value = false
-                            CancelGame()
+                            cancelGame()
                         }) {
                             Text("Yes")
                         }

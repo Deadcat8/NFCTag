@@ -56,16 +56,16 @@ class NfcReaderService : Service() {
         // Return this instance of NfcReaderService so clients can call public methods
         fun getService(): NfcReaderService = this@NfcReaderService
     }
-    override fun onBind(intent: Intent?): IBinder {
-        Log.d("NfcReaderService", "onBind called.")
-        return binder
-    }
-
     override fun onCreate() {
         super.onCreate()
 
         // Initialize NFC adapter
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        try {
+            nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        } catch (e: Exception) {
+            Log.w("NfcReaderService", "NFC is not available on this device.")
+            stopSelf()
+        }
         // Check if NFC is available on the device
         val intent = Intent(this, HostActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -79,13 +79,13 @@ class NfcReaderService : Service() {
         techList = arrayOf(arrayOf(IsoDep::class.java.name))
         Log.d("NfcReaderService", "Service created with nfcAdapter: $nfcAdapter and pendingIntent: $pendingIntent")
     }
-
+    override fun onBind(intent: Intent?): IBinder {
+        Log.d("NfcReaderService", "onBind called.")
+        return binder
+    }
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        //startForeground(1, createNotification())
-
         Log.d("NfcReaderService", "Service started")
 
         if (intent?.action == NfcAdapter.ACTION_TAG_DISCOVERED) {
@@ -149,7 +149,6 @@ class NfcReaderService : Service() {
                 ))
                 val deviceId = String(response, Charsets.UTF_8)
                 Log.d("NFC_SERVICE", "Sent Device ID: $deviceId")
-                savePeerDeviceId(deviceId)
             } catch (e: Exception) {
                 Log.e("NfcReaderService", "Error reading peer device ID: ${e.message}")
                 e.printStackTrace()
@@ -168,7 +167,7 @@ class NfcReaderService : Service() {
         }
         Log.d("NfcReaderService", "Processing discovered tag with ID: ${tag.id?.toHexString() ?: "N/A"}")
 
-        // --- Check for NDEF technology first ---
+        // Check for NDEF technology first
         val ndef = Ndef.get(tag)
         if (ndef != null) {
             Log.d("NfcReaderService", "Tag supports NDEF technology. Attempting to read NDEF message.")
@@ -184,7 +183,7 @@ class NfcReaderService : Service() {
             return // Exit if handled as an NDEF tag
         }
 
-        // --- If not NDEF, check for IsoDep (your existing logic adapted) ---
+        // If not NDEF, check for IsoDep
         val isoDep = IsoDep.get(tag)
         if (isoDep != null) {
             Log.d("NfcReaderService", "Tag supports IsoDep technology. Proceeding with IsoDep processing.")
@@ -192,20 +191,10 @@ class NfcReaderService : Service() {
             return // Exit after IsoDep processing
         }
 
-        // --- If neither NDEF nor IsoDep ---
+        // If neither NDEF nor IsoDep
         Log.d("NfcReaderService", "Discovered tag supports neither NDEF nor IsoDep.")
     }
 
-    private fun savePeerDeviceId(id: String) {
-        val prefs = getSharedPreferences("known_devices", Context.MODE_PRIVATE)
-        if (!prefs.contains(id)) {
-            prefs.edit().putBoolean(id, true).apply()
-            Log.d("NFC", "New device detected and stored: $id")
-        } else {
-            Log.d("NFC", "Known device reconnected: $id")
-            //Caught!
-        }
-    }
 
     // Simple NDEF read function
     private fun readNdefTagSimple(ndef: Ndef): NdefMessage? {
@@ -261,10 +250,9 @@ class NfcReaderService : Service() {
                 Log.d("NfcReaderService", "SELECT AID successful. Proceeding with further commands.")
 
                 // 2. If SELECT AID was successful, send your custom command to get the device ID
-                // Assuming you have a defined APDU for getting the device ID, e.g., 00C00000
-                val getDeviceIdApdu = hexStringToByteArray("00C00000") // Assuming hexStringToByteArray exists
+                // APDU Code for getting DeviceId = 00C00000
+                val getDeviceIdApdu = hexStringToByteArray("00C00000")
                 Log.d("NfcReaderService", "Sending GET DEVICE ID APDU: ${getDeviceIdApdu.toHexString()}")
-
                 val deviceIdResponse = isoDep.transceive(getDeviceIdApdu)
                 Log.d("NfcReaderService", "Received GET DEVICE ID response: ${deviceIdResponse.toHexString()}")
 
@@ -275,8 +263,7 @@ class NfcReaderService : Service() {
                     val deviceId = String(deviceIdBytes, Charsets.UTF_8)
                     Log.d("NfcReaderService", "Successfully read peer device ID: $deviceId")
 
-                    // Save the device ID and trigger the event to notify the Activity
-                    savePeerDeviceId(deviceId)
+                    // Trigger the event to notify the Activity
                     triggerHceDeviceIdEvent(deviceId)
                 } else {
                     Log.e("NfcReaderService", "GET DEVICE ID command failed or returned invalid response.")
