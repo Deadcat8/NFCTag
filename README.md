@@ -1,4 +1,5 @@
 # Phish Phingers
+> Making Credit Card Theft Fun! (and educational... rather than illegal)
 ### Team Members:
 **Luca** – Creative Lead, Brand Manager, Research Lead
 
