@@ -1,7 +1,8 @@
 # Phish Phingers
 > Making Credit Card Theft Fun! (and educational... rather than illegal)
 
-![](/appicon.png)
+[![Promotional Video](https://img.youtube.com/vi/t3P__7ebAaQ/maxresdefault.jpg)]((https://youtu.be/t3P__7ebAaQ))
+
 ### Team Members:
 **Luca** – Creative Lead, Brand Manager, Research Lead
 
@@ -41,3 +42,5 @@ Host Card Emulation - Used to receive APDU commands
 Near Field Communication Reading - Used to converse with HCE device and delivering APDU commands
 
 > If you're interested in learning more, playing the game, or adapting it for your own awareness workshops, feel free to reach out. Phish Phingers is all about making cyber awareness active, memorable and actually fun.
+
+![](/appicon.png)
