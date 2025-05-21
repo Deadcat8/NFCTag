@@ -4,6 +4,7 @@
 ## Promotional Video ##
 [![Promotional Video](https://img.youtube.com/vi/t3P__7ebAaQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=t3P__7ebAaQ)
 
+![](/Homepage_Screenshot.png) ![](/Join_Screenshot.png)  ![](/Host_Warning_Screenshot.png) 
 ### Team Members:
 **Luca** – Creative Lead, Brand Manager, Research Lead
 
