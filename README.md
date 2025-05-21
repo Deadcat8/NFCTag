@@ -1,6 +1,7 @@
 # Phish Phingers
 > Making Credit Card Theft Fun! (and educational... rather than illegal)
 
+## Promotional Video ##
 [![Promotional Video](https://img.youtube.com/vi/t3P__7ebAaQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=t3P__7ebAaQ)
 
 ### Team Members:
